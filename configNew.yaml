@@ -1,0 +1,142 @@
+# Tiny pen plotter - PiBot V4.96 Pro
+# X and Y: stepper motors on on-board A4988 drivers (sockets X and Y)
+# Z: RC servo (S3003) on gpio.4, used as pen lift
+#
+# Changes compared to the PiBot factory test file:
+#   - Z axis: stepper driver replaced by rc_servo on gpio.4
+#   - Z limit switch (gpio.35) removed: a servo does not use one
+#   - Axes A, B, C removed: not used on this machine
+#   - Spindle sections removed (relay, pwm, Laser, 10V, YL620, uart1):
+#     a plotter has no spindle, and "pwm" used gpio.4, which the servo needs
+#   - X and Y are unchanged from the factory file
+
+board: V49PBV496PRO
+name: Tiny_Plotter_XY_ServoZ
+
+stepping:
+  engine: I2S_STREAM
+  idle_ms: 254
+  pulse_us: 4
+  dir_delay_us: 1
+  disable_delay_us: 0
+
+axes:
+  shared_stepper_disable_pin: NO_PIN
+
+  x:
+    steps_per_mm: 800.000
+    max_rate_mm_per_min: 5000.000
+    acceleration_mm_per_sec2: 100.000
+    max_travel_mm: 260.000
+    soft_limits: false
+    homing:
+      cycle: 2
+      positive_direction: true
+      mpos_mm: 0.000
+      feed_mm_per_min: 100.000
+      seek_mm_per_min: 200.000
+      settle_ms: 500
+      seek_scaler: 1.100
+      feed_scaler: 1.100
+    motor0:
+      limit_neg_pin: gpio.33:low
+      limit_pos_pin: NO_PIN
+      limit_all_pin: NO_PIN
+      hard_limits: false
+      pulloff_mm: 1.000
+      stepstick:
+        step_pin: I2SO.2
+        direction_pin: I2SO.1:low
+        disable_pin: I2SO.0
+        ms3_pin: I2SO.3:high
+
+  y:
+    steps_per_mm: 800.000
+    max_rate_mm_per_min: 5000.000
+    acceleration_mm_per_sec2: 100.000
+    max_travel_mm: 260.000
+    soft_limits: false
+    homing:
+      cycle: 2
+      positive_direction: true
+      mpos_mm: 0.000
+      feed_mm_per_min: 100.000
+      seek_mm_per_min: 200.000
+      settle_ms: 500
+      seek_scaler: 1.100
+      feed_scaler: 1.100
+    motor0:
+      limit_neg_pin: gpio.32:low
+      limit_pos_pin: NO_PIN
+      limit_all_pin: NO_PIN
+      hard_limits: false
+      pulloff_mm: 1.000
+      stepstick:
+        step_pin: I2SO.5
+        direction_pin: I2SO.4:low
+        disable_pin: I2SO.7
+        ms3_pin: I2SO.6:high
+
+  z:
+    # Servo pen lift. The Z range 0..5 mm is mapped onto the pulse range:
+    #   Z0 -> min_pulse_us      Z5 -> max_pulse_us
+    # The "mm" here are only a scale for the servo angle, not real millimetres.
+    steps_per_mm: 100.000
+    max_rate_mm_per_min: 5000.000
+    acceleration_mm_per_sec2: 100.000
+    max_travel_mm: 5.000
+    soft_limits: false
+    homing:
+      # A servo is not homed against a switch. Homing only sets Z to mpos_mm
+      # and moves the servo there. Cycle 1 = pen goes up before X and Y move.
+      cycle: 1
+      positive_direction: true
+      mpos_mm: 5.000
+    motor0:
+      limit_neg_pin: NO_PIN
+      limit_pos_pin: NO_PIN
+      limit_all_pin: NO_PIN
+      hard_limits: false
+      rc_servo:
+        pwm_hz: 50
+        output_pin: gpio.4
+        # S3003 datasheet: 1000 us = 0 degrees, 2000 us = 180 degrees.
+        # Narrow this range later (for example 1300..1700) to get a small
+        # pen lift instead of the full swing.
+        min_pulse_us: 1000
+        max_pulse_us: 2000
+
+i2so:
+  bck_pin: gpio.22
+  data_pin: gpio.21
+  ws_pin: gpio.17
+
+spi:
+  miso_pin: gpio.19
+  mosi_pin: gpio.23
+  sck_pin: gpio.18
+
+sdcard:
+  card_detect_pin: NO_PIN
+  cs_pin: gpio.5
+
+probe:
+  pin: gpio.2:pu:low
+  toolsetter_pin: NO_PIN
+  check_mode_start: true
+  hard_stop: false
+
+start:
+  must_home: false
+
+# OLED display (same as factory file)
+i2c0:
+  sda_pin: gpio.27
+  scl_pin: gpio.25
+
+oled:
+  i2c_num: 0
+  i2c_address: 60
+  width: 128
+  height: 64
+  radio_delay_ms: 1000
