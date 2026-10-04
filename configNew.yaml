@@ -15,7 +15,7 @@ name: Tiny_Plotter_XY_ServoZ
 
 stepping:
   engine: I2S_STREAM
-  idle_ms: 254
+  idle_ms: 255
   pulse_us: 4
   dir_delay_us: 1
   disable_delay_us: 0
